@@ -28,9 +28,10 @@ EVENTS_FILE = LEETCODE_DIR / "events.yaml"
 def parse_frontmatter(filepath: str) -> dict | None:
     """Extract YAML frontmatter from a markdown file.
 
-    Returns a dict with keys 'name', 'id', 'difficulty' (id and difficulty
-    are coerced to int).  Returns None if the file is unreadable, has no
-    frontmatter, or is missing required fields.
+    Returns a dict with keys 'name', 'id', 'difficulty', 'tags' (id and
+    difficulty are coerced to int; tags is a list of strings).  Returns
+    None if the file is unreadable, has no frontmatter, or is missing
+    required fields.
     """
     try:
         text = Path(filepath).read_text()
@@ -42,19 +43,54 @@ def parse_frontmatter(filepath: str) -> dict | None:
         return None
 
     fm: dict = {}
+    in_list = False
+    list_key: str | None = None
+
     for line in m.group(1).strip().split("\n"):
-        line = line.strip()
-        if not line or ":" not in line:
+        line_stripped = line.strip()
+        if not line_stripped:
             continue
-        key, _, val = line.partition(":")
+
+        # Collect items for a multi-line list (e.g. tags:\n  - foo\n  - bar)
+        if in_list:
+            if line_stripped.startswith("- "):
+                item = line_stripped[2:].strip().strip("\"'")
+                fm[list_key].append(item)
+                continue
+            else:
+                in_list = False
+                list_key = None
+                # Fall through to process this line as a regular key:value
+
+        if ":" not in line_stripped:
+            continue
+
+        key, _, val = line_stripped.partition(":")
         key = key.strip()
-        val = val.strip().strip("\"'")
+        val = val.strip()
+
+        # Empty value → might be start of a multi-line list
+        if not val:
+            in_list = True
+            list_key = key
+            fm[key] = []
+            continue
+
+        # Inline YAML list: [item1, item2]
+        if val.startswith("[") and val.endswith("]"):
+            items = [
+                x.strip().strip("\"'")
+                for x in val[1:-1].split(",")
+                if x.strip()
+            ]
+            fm[key] = items
+            continue
 
         # Coerce numbers
         try:
             val = int(val)
         except ValueError:
-            pass
+            val = val.strip("\"'")
 
         fm[key] = val
 
@@ -65,6 +101,7 @@ def parse_frontmatter(filepath: str) -> dict | None:
     fm["id"] = int(fm["id"])
     fm["difficulty"] = int(fm["difficulty"])
     fm.setdefault("name", "")
+    fm.setdefault("tags", [])
     return fm
 
 
@@ -72,26 +109,64 @@ def parse_frontmatter(filepath: str) -> dict | None:
 # State file (simple key:value format — no YAML parser needed)
 # ---------------------------------------------------------------------------
 
-def load_state() -> dict[int, int]:
-    """Load .state.yaml → {id: difficulty, ...}.  Empty dict if missing."""
+def load_state() -> dict[int, dict]:
+    """Load .state.yaml → {id: {difficulty, tags}, ...}.  Empty dict if missing.
+
+    Handles both legacy format ("1: 0") and nested format with tags.
+    """
     if not STATE_FILE.exists():
         return {}
-    state: dict[int, int] = {}
+    state: dict[int, dict] = {}
+    current_id: int | None = None
     for line in STATE_FILE.read_text().splitlines():
-        line = line.strip()
-        if not line or ":" not in line:
+        # Detect indentation from raw line (before strip removes whitespace)
+        is_indented = line.startswith(" ")
+        line_stripped = line.strip()
+        if not line_stripped:
             continue
-        key, _, val = line.partition(":")
-        try:
-            state[int(key.strip())] = int(val.strip())
-        except ValueError:
-            continue
+        if not is_indented:
+            # Top-level key
+            if ":" in line_stripped:
+                key_part, _, val_part = line_stripped.partition(":")
+                pid = int(key_part.strip())
+                val_part = val_part.strip()
+                state[pid] = {"difficulty": 0, "tags": []}
+                current_id = pid
+                if val_part:
+                    # Legacy format: "1: 0" — difficulty value on same line
+                    try:
+                        state[pid]["difficulty"] = int(val_part)
+                    except ValueError:
+                        pass
+        elif current_id is not None and ":" in line_stripped:
+            key, _, val = line_stripped.partition(":")
+            key = key.strip()
+            val = val.strip()
+            if key == "difficulty":
+                try:
+                    state[current_id]["difficulty"] = int(val)
+                except ValueError:
+                    pass
+            elif key == "tags":
+                if val.startswith("[") and val.endswith("]"):
+                    state[current_id]["tags"] = [
+                        t.strip().strip("\"'")
+                        for t in val[1:-1].split(",")
+                        if t.strip()
+                    ]
     return state
 
 
-def save_state(state: dict[int, int]) -> None:
-    """Write .state.yaml as 'id: difficulty' lines, sorted by id."""
-    lines = [f"{pid}: {diff}" for pid, diff in sorted(state.items())]
+def save_state(state: dict[int, dict]) -> None:
+    """Write .state.yaml with difficulty and tags per problem, sorted by id."""
+    lines = []
+    for pid in sorted(state):
+        entry = state[pid]
+        lines.append("%d:" % pid)
+        lines.append("  difficulty: %d" % entry.get("difficulty", 0))
+        tags = entry.get("tags", [])
+        if tags:
+            lines.append("  tags: [%s]" % ", ".join(tags))
     STATE_FILE.write_text("\n".join(lines) + "\n")
 
 
@@ -138,12 +213,13 @@ def main() -> int:
     pid = fm["id"]
     name = fm["name"]
     new_diff = fm["difficulty"]
+    tags = fm.get("tags", [])
     state = load_state()
 
-    prev_diff = state.get(pid)
+    prev = state.get(pid)
 
-    if prev_diff is None:
-        state[pid] = new_diff
+    if prev is None:
+        state[pid] = {"difficulty": new_diff, "tags": tags}
         save_state(state)
         append_event({
             "id": pid,
@@ -153,18 +229,24 @@ def main() -> int:
         print(f"create: {name} (difficulty {new_diff})")
         return 0
 
-    if prev_diff == new_diff:
+    prev_diff = prev.get("difficulty", -1)
+
+    if prev_diff == new_diff and prev.get("tags") == tags:
         # No change — silent success
         return 0
 
-    state[pid] = new_diff
+    # Always sync current state (handles tag-only changes silently)
+    state[pid]["difficulty"] = new_diff
+    state[pid]["tags"] = tags
     save_state(state)
-    append_event({
-        "id": pid,
-        "name": name,
-        "difficulty": new_diff,
-    })
-    print(f"update: {name} ({prev_diff} → {new_diff})")
+
+    if prev_diff != new_diff:
+        append_event({
+            "id": pid,
+            "name": name,
+            "difficulty": new_diff,
+        })
+        print(f"update: {name} ({prev_diff} → {new_diff})")
     return 0
 
 

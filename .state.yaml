@@ -1,3 +1,9 @@
-1: 0
-4: 4
-9: 0
+1:
+  difficulty: 0
+  tags: [hashmap]
+4:
+  difficulty: 4
+  tags: [binary-search]
+9:
+  difficulty: 0
+  tags: [two-pointer]

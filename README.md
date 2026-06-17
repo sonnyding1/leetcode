@@ -8,7 +8,7 @@ This notes system is a repository of my understanding of LeetCode problems. This
 
 Each Markdown file describes the process of solving a specific LeetCode problem, and may include things like thought process, partial solutions, pseudocode, etc. The Markdown file should aim to contain only my current understanding of the problem, not my past understandings, and should be brief.
 
-The Markdown file should contain YAML frontmatter with `name`, `id`, and `difficulty`.
+The Markdown file should contain YAML frontmatter with `name`, `id`, `difficulty`, `tags`.
 
 ### `events.yaml`
 
@@ -32,6 +32,22 @@ Zero-dependency Python script that parses frontmatter from a `.md` file, compare
 - 3: Fun, have majority of the intuition down, but still have small portions of unknowns that bring difficulties. Have not very high confidence in implementation. Overall have a good shot of solving the question.
 - 4: Challenging, have some intuition on how to solve the problem, but probably not enough to be able to solve the problem.
 - 5: Out of bound, don't even have intuition on how to solve the problem, likely lacking some key concepts to be able to tackle the problem.
+
+## Tags
+
+LeetCode problems are in different styles and use different techniques, and they are recorded in tags. A list of tags include:
+
+- two-pointer
+- sliding-window
+- bfs
+- dfs
+- hashmap
+- binary-search
+- bst
+- linked-list
+- dp
+
+The list is not complete and shall grow.
 
 ## LLM Usage
 
