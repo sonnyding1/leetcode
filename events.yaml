@@ -10,3 +10,27 @@
   name: "Median of Two Sorted Arrays"
   difficulty: 4
   timestamp: 2026-06-17T04:32:28Z
+- id: 3
+  name: "Longest Substring Without Repeating Characters"
+  difficulty: 2
+  timestamp: 2026-06-21T03:20:52Z
+- id: 15
+  name: "3Sum"
+  difficulty: 2
+  timestamp: 2026-06-21T04:08:23Z
+- id: 2
+  name: "Add Two Numbers"
+  difficulty: 1
+  timestamp: 2026-06-21T04:47:49Z
+- id: 11
+  name: "Container With Most Water"
+  difficulty: 4
+  timestamp: 2026-06-22T01:27:50Z
+- id: 121
+  name: "Best Time to Buy and Sell Stock"
+  difficulty: 3
+  timestamp: 2026-06-22T01:43:40Z
+- id: 560
+  name: "Subarray Sum Equals K"
+  difficulty: 4
+  timestamp: 2026-06-22T02:50:49Z

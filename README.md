@@ -28,7 +28,7 @@ Zero-dependency Python script that parses frontmatter from a `.md` file, compare
 
 - 0: Trivial, 100% confidence in solving the problem, and confident that I will continue to be able to solve the problem even without any practice in the future. An example is Two Sum.
 - 1: Easy, know exactly how to break down the problem into which steps, then carry through the steps. May have a little concern on implementation details, may need to review the problem once in a year or so.
-- 2: Comfortable, know basically how to do the problem, but can have some fuzzy spots, and can sometiems get caught in the implementation details. Need to review relatively frequently, to try to promote into difficulty 1 and 0.
+- 2: Comfortable, know basically how to do the problem, but can have some fuzzy spots, and can sometimes get caught in the implementation details. Need to review relatively frequently, to try to promote into difficulty 1 and 0.
 - 3: Fun, have majority of the intuition down, but still have small portions of unknowns that bring difficulties. Have not very high confidence in implementation. Overall have a good shot of solving the question.
 - 4: Challenging, have some intuition on how to solve the problem, but probably not enough to be able to solve the problem.
 - 5: Out of bound, don't even have intuition on how to solve the problem, likely lacking some key concepts to be able to tackle the problem.

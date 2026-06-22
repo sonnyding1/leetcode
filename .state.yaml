@@ -1,9 +1,27 @@
 1:
   difficulty: 0
   tags: [hashmap]
+2:
+  difficulty: 1
+  tags: [linked-list]
+3:
+  difficulty: 2
+  tags: [two-pointer]
 4:
   difficulty: 4
   tags: [binary-search]
 9:
   difficulty: 0
   tags: [two-pointer]
+11:
+  difficulty: 4
+  tags: [two-pointer]
+15:
+  difficulty: 2
+  tags: [two-pointer]
+121:
+  difficulty: 3
+  tags: [sliding-window]
+560:
+  difficulty: 4
+  tags: [prefix-sum, hashmap]
